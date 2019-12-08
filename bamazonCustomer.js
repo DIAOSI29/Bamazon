@@ -44,37 +44,26 @@ function runBamazon() {
 
   function runCustomerSelect() {
     inquirer
-      .prompt([
-        {
-          name: "chooseItem",
-          message: "Please select the id of your chosen item",
-          type: "rawlist",
-          choices: [
-            "AP2W",
-            "APP",
-            "AW5",
-            "AWE",
-            "IP11",
-            "IP11P",
-            "IP11PMX",
-            "IPD",
-            "IPDM",
-            "IPDP",
-            "MB13P",
-            "MBA",
-            "MP16P"
-          ]
-        },
-        {
-          name: "quantity",
-          message: "Please select how many of the item you want to buy",
-          type: "number",
-          validate: function(value) {
-            var valid = !isNaN(parseFloat(value));
-            return valid || "Please enter a number";
-          }
-        }
-      ])
+      .prompt({
+        name: "chooseItem",
+        message: "Please select the id of your chosen item",
+        type: "rawlist",
+        choices: [
+          "AP2W",
+          "APP",
+          "AW5",
+          "AWE",
+          "IP11",
+          "IP11P",
+          "IP11PMX",
+          "IPD",
+          "IPDM",
+          "IPDP",
+          "MB13P",
+          "MBA",
+          "MP16P"
+        ]
+      })
       .then(function(answer) {
         // console.log(answer.chooseItem);
         // console.log(answer.quantity);
@@ -87,48 +76,85 @@ function runBamazon() {
           if (err) throw err;
           // console.log(res[0].stock_quantity);
           chosenItemStockLevel = res[0].stock_quantity;
-          ProcessOrder(answer);
+          var chosenItemID = answer.chooseItem;
+          console.log(`\nYou have selected ${res[0].product_name} :)\n`);
+          ProcessOrder(chosenItemID);
         });
       });
 
-    function ProcessOrder(answer) {
-      var chosenItemID = answer.chooseItem;
-      var query =
-        "SELECT item_id, product_name, stock_quantity, price FROM products WHERE ?";
-      connection.query(query, { item_id: answer.chooseItem }, function(
-        err,
-        res
-      ) {
-        if (err) throw err;
-        // console.log(res[0].product_name);
+    function ProcessOrder(chosenItemID) {
+      inquirer
+        .prompt({
+          name: "quantity",
+          message: "How many do you want to buy?",
+          type: "number",
+          validate: function(value) {
+            var valid = !isNaN(parseFloat(value));
+            return valid || "Please enter a number";
+          }
+        })
+        .then(function(answer) {
+          var query =
+            "SELECT item_id, product_name, stock_quantity, price FROM products WHERE ?";
+          connection.query(query, { item_id: chosenItemID }, function(
+            err,
+            res
+          ) {
+            if (err) throw err;
+            // console.log(res[0].product_name);
 
-        if (answer.quantity > chosenItemStockLevel) {
-          console.log("Insufficient Stock!");
-        } else {
-          var stockLevelAfterThisSale = parseFloat(
-            parseInt(chosenItemStockLevel) - parseInt(answer.quantity)
-          );
+            if (answer.quantity > chosenItemStockLevel) {
+              console.log("Insufficient Stock!");
+              exitOrNot();
+            } else {
+              var stockLevelAfterThisSale = parseFloat(
+                parseInt(chosenItemStockLevel) - parseInt(answer.quantity)
+              );
 
-          console.log(
-            `There are ${stockLevelAfterThisSale} units left in stock!`
-          );
-          var totalCost = parseInt(answer.quantity * res[0].price);
-          console.log(
-            `you have successfully puchased ${answer.quantity} of ${res[0].product_name} at a total cost of ${totalCost}. Thanks for your purchase!`
-          );
-          var queryProcessOrder =
-            "UPDATE products SET stock_quantity = ? WHERE item_id = ?";
-          connection.query(
-            queryProcessOrder,
-            [stockLevelAfterThisSale, chosenItemID],
-            function(error, res) {
-              if (error) {
-                console.log("error", error);
-              }
+              // console.log(
+              //   `There are ${stockLevelAfterThisSale} units left in stock!`
+              // );
+              var totalCost = parseInt(answer.quantity * res[0].price);
+              console.log(
+                `\nYou have successfully puchased ${answer.quantity} of ${res[0].product_name} at a total cost of ${totalCost}. There are ${stockLevelAfterThisSale} units left in stock. Thanks for your purchase!\n`
+              );
+
+              var queryProcessOrder =
+                "UPDATE products SET stock_quantity = ? WHERE item_id = ?";
+              connection.query(
+                queryProcessOrder,
+                [stockLevelAfterThisSale, chosenItemID],
+                function(error, res) {
+                  if (error) {
+                    console.log("error", error);
+                  }
+                }
+              );
+              exitOrNot();
             }
-          );
+          });
+        });
+    }
+  }
+
+  function exitOrNot() {
+    inquirer
+      .prompt({
+        name: "todoNext",
+        type: "list",
+        message: "What would you like to do next?",
+        choices: ["Make Another Purchase", "Finish and Exit"]
+      })
+      .then(function(answer) {
+        switch (answer.todoNext) {
+          case "Make Another Purchase":
+            runCustomerSelect();
+            break;
+
+          case "Finish and Exit":
+            connection.end();
+            break;
         }
       });
-    }
   }
 }
