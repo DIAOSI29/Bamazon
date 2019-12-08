@@ -47,7 +47,7 @@ function runBamazon() {
       .prompt([
         {
           name: "chooseItem",
-          message: "Please type in the id of your chosen item",
+          message: "Please select the id of your chosen item",
           type: "rawlist",
           choices: [
             "AP2W",
