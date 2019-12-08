@@ -48,16 +48,22 @@ function runBamazon() {
         {
           name: "chooseItem",
           message: "Please type in the id of your chosen item",
-          type: "input",
-          validate: function(value) {
-            if (parseInt(value.trim().length) > 7) {
-              return false;
-            }
-            return true;
-          },
-          filter: function(value) {
-            return value.toUpperCase();
-          }
+          type: "rawlist",
+          choices: [
+            "AP2W",
+            "APP",
+            "AW5",
+            "AWE",
+            "IP11",
+            "IP11P",
+            "IP11PMX",
+            "IPD",
+            "IPDM",
+            "IPDP",
+            "MB13P",
+            "MBA",
+            "MP16P"
+          ]
         },
         {
           name: "quantity",
@@ -70,27 +76,59 @@ function runBamazon() {
         }
       ])
       .then(function(answer) {
-        console.log(answer.chooseItem);
-        console.log(answer.quantity);
+        // console.log(answer.chooseItem);
+        // console.log(answer.quantity);
         var query =
-          "SELECT item_id, product_name, stock_quantity FROM products WHERE ?";
+          "SELECT item_id, product_name, stock_quantity, price FROM products WHERE ?";
         connection.query(query, { item_id: answer.chooseItem }, function(
           err,
           res
         ) {
           if (err) throw err;
-          console.log(res[0].stock_quantity);
+          // console.log(res[0].stock_quantity);
           chosenItemStockLevel = res[0].stock_quantity;
           ProcessOrder(answer);
         });
       });
 
     function ProcessOrder(answer) {
-      if (answer.quantity > chosenItemStockLevel) {
-        console.log("Insufficient Stock!");
-      } else {
-        console.log("Order Placed!");
-      }
+      var chosenItemID = answer.chooseItem;
+      var query =
+        "SELECT item_id, product_name, stock_quantity, price FROM products WHERE ?";
+      connection.query(query, { item_id: answer.chooseItem }, function(
+        err,
+        res
+      ) {
+        if (err) throw err;
+        // console.log(res[0].product_name);
+
+        if (answer.quantity > chosenItemStockLevel) {
+          console.log("Insufficient Stock!");
+        } else {
+          var stockLevelAfterThisSale = parseFloat(
+            parseInt(chosenItemStockLevel) - parseInt(answer.quantity)
+          );
+
+          console.log(
+            `There are ${stockLevelAfterThisSale} units left in stock!`
+          );
+          var totalCost = parseInt(answer.quantity * res[0].price);
+          console.log(
+            `you have successfully puchased ${answer.quantity} of ${res[0].product_name} at a total cost of ${totalCost}. Thanks for your purchase!`
+          );
+          var queryProcessOrder =
+            "UPDATE products SET stock_quantity = ? WHERE item_id = ?";
+          connection.query(
+            queryProcessOrder,
+            [stockLevelAfterThisSale, chosenItemID],
+            function(error, res) {
+              if (error) {
+                console.log("error", error);
+              }
+            }
+          );
+        }
+      });
     }
   }
 }
