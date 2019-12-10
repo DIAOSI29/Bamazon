@@ -1,5 +1,7 @@
 var mysql = require("mysql");
+var Promise = require("promise");
 var inquirer = require("inquirer");
+
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -125,54 +127,119 @@ function runBamazonManager() {
   }
 
   function addInventory() {
-    inquirer
-      .prompt([
-        {
-          name: "ProductToAdd",
-          message: "Please choose the item to add stock",
-          type: "list",
-          choices: loopThroughProducts()
-        },
-        {
-          name: "quantityToAdd",
-          message: "Plase type in the quantity of stock that you want to add",
-          type: "input",
-          validate: function(value) {
-            var valid = !isNaN(parseFloat(value));
-            return valid || "Please enter a number";
-          }
-        }
-      ])
-      .then(function(answer) {
-        console.log("test");
-      });
-  }
-
-  function loopThroughProducts() {
+    var productList = [];
     var queryAddInventory =
       "SELECT item_id, product_name, stock_quantity FROM products";
     connection.query(queryAddInventory, function(err, res) {
       if (err) throw err;
-      return generateList(res);
+      for (let i = 0; i < res.length; i++) {
+        productList.push(res[i].item_id);
+      }
+      inquirer
+        .prompt([
+          {
+            name: "ProductToAdd",
+            message: "Please choose the item to add stock",
+            type: "list",
+            choices: productList
+          },
+          {
+            name: "quantityToAdd",
+            message: "Plase type in the quantity of stock that you want to add",
+            type: "input",
+            validate: function(value) {
+              var valid = !isNaN(parseFloat(value));
+              return valid || "Please enter a number";
+            }
+          }
+        ])
+        .then(function(answer) {
+          let selectedProduct = answer.ProductToAdd;
+          let selectedQuantity = answer.quantityToAdd;
+          connection.query("SELECT * FROM products where item_id = selectedProduct",function(err,res){
+            var 
+          })
+        });
     });
   }
 
-  async function generateList(res) {
-    var productList = [];
-    var nothingButToAvoidErrorMessageButFailed;
-    for (let i = 0; i < res.length; i++) {
-      if (true) {
-        productList.push(res[i].item_id);
-      }
-      console.log(nothingButToAvoidErrorMessageButFailed);
-    }
+  //   async function finalFunction() {
+  //     try {
+  //       await loopThroughProducts();
 
-    var results = await Promise.all(
-      productList,
-      nothingButToAvoidErrorMessageButFailed
-    );
-    console.log(results);
-    console.log(nothingButToAvoidErrorMessageButFailed);
-    return results;
-  }
+  //       return productList;
+  //     } catch (err) {
+  //       console.log("err");
+  //     }
+  //   }
+
+  //   function addNewProduct() {
+  //     inquirer
+  //       .prompt([
+  //         {
+  //           type: "input",
+  //           message: "Please Give This Item A New ID",
+  //           name: "newID"
+  //         },
+  //         {
+  //           type: "input",
+  //           message: "Please Add Description For This Item",
+  //           name: "newName"
+  //         },
+  //         {
+  //           type: "input",
+  //           message: "Please Specify Its Department",
+  //           name: "newDepartment"
+  //         },
+  //         {
+  //           type: "number",
+  //           message: "Please Specify Price",
+  //           name: "newPrice"
+  //         },
+  //         {
+  //           type: "number",
+  //           message: "Please Specify How Many Stock You Want To Keep",
+  //           name: "newStock"
+  //         }
+  //       ])
+  //       .then(function(answer) {
+  //         var queryAddNewProduct =
+  //           "INSERT INTO products (item_id,product_name,department_name,price,stock_quantity) VALUES ?";
+  //         connection.query(
+  //           queryAddNewProduct,
+  //           [
+  //             answer.newID,
+  //             answer.newName,
+  //             answer.newDepartment,
+  //             answer.newPrice,
+  //             answer.newStock
+  //           ],
+  //           function(err, res) {
+  //             console.log(res);
+  //             console.log(
+  //               `\nYou have successfully added ${res.affectedRows} item into the system, which is detailed as follows:\n`
+  //             );
+  //             var displayNewlyAddedItem = "item_id = LAST_INSERT_ID()";
+  //             connection.query(
+  //               "SELECT * FROM products WHERE ?",
+  //               displayNewlyAddedItem,
+  //               function(err, res) {
+  //                 console.log(
+  //                   res[0].item_id.padEnd(10) +
+  //                     "|     " +
+  //                     res[0].product_name.padEnd(30) +
+  //                     "|     " +
+  //                     res[0].department_name.padEnd(10) +
+  //                     "|     " +
+  //                     res[0].price.toString().padEnd(10) +
+  //                     "|     " +
+  //                     res[0].stock_quantity
+  //                 );
+
+  //             );
+  //               }
+  //           }
+  //         );
+  //       });
+  //   }
 }
