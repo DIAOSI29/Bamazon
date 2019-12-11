@@ -90,12 +90,13 @@ function runBamazonManager() {
         );
       }
       console.log("            ");
+
       runBamazonManager();
     });
   }
 
   function viewLowInventory() {
-    console.log("\n" + "Items with a inventory level of less than 5" + "\n");
+    console.log("\n" + "Items with an inventory level of less than 5" + "\n");
     var queryLowInventory =
       "SELECT item_id, product_name, price, stock_quantity FROM products WHERE stock_quantity < 5";
     connection.query(queryLowInventory, function(err, res) {
@@ -154,92 +155,110 @@ function runBamazonManager() {
           }
         ])
         .then(function(answer) {
-          let selectedProduct = answer.ProductToAdd;
-          let selectedQuantity = answer.quantityToAdd;
-          connection.query("SELECT * FROM products where item_id = selectedProduct",function(err,res){
-            var 
-          })
+          var selectedProduct = answer.ProductToAdd;
+          var selectedQuantity = answer.quantityToAdd;
+          connection.query(
+            `UPDATE products SET stock_quantity = stock_quantity + 
+            ${selectedQuantity} WHERE ?`,
+            {
+              item_id: selectedProduct
+            },
+            function(err, res) {
+              if (err) throw err;
+              console.log(
+                "\n".repeat(2) +
+                  `You have successfully added ${selectedQuantity} of ${selectedProduct} into stock` +
+                  "\n".repeat(1)
+              );
+            }
+          );
+          connection.query(
+            `SELECT stock_quantity FROM products WHERE ?`,
+            {
+              item_id: selectedProduct
+            },
+            function(err, res) {
+              if (err) throw err;
+              console.log(
+                `Current stock of this item is ${res[0].stock_quantity}` +
+                  "\n".repeat(2)
+              );
+              runBamazonManager();
+            }
+          );
         });
     });
   }
 
-  //   async function finalFunction() {
-  //     try {
-  //       await loopThroughProducts();
+  function addNewProduct() {
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          message: "Please Give This Item An ID",
+          name: "newID"
+        },
+        {
+          type: "input",
+          message: "Please Add Description For This Item",
+          name: "newName"
+        },
+        {
+          type: "input",
+          message: "Please Specify Its Department",
+          name: "newDepartment"
+        },
+        {
+          type: "number",
+          message: "Please Specify Its Price",
+          name: "newPrice"
+        },
+        {
+          type: "number",
+          message: "Please Specify How Many Stock You Want To Keep",
+          name: "newStock"
+        }
+      ])
+      .then(function(answer) {
+        var newID = answer.newID;
+        var newName = answer.newName;
+        var newDepartment = answer.newDepartment;
+        var newPrice = answer.newPrice;
+        var newStock = answer.newStock;
+        var queryAddNewProduct =
+          "INSERT INTO products (item_id,product_name,department_name,price,stock_quantity) VALUES (?,?,?,?,?)";
+        connection.query(
+          queryAddNewProduct,
+          [newID, newName, newDepartment, newPrice, newStock],
+          function(err, res) {
+            if (err) throw err;
+            // console.log(res);
+            console.log(
+              `\nYou have successfully added ${res.affectedRows} item into the system, which is detailed as follows:\n`
+            );
 
-  //       return productList;
-  //     } catch (err) {
-  //       console.log("err");
-  //     }
-  //   }
-
-  //   function addNewProduct() {
-  //     inquirer
-  //       .prompt([
-  //         {
-  //           type: "input",
-  //           message: "Please Give This Item A New ID",
-  //           name: "newID"
-  //         },
-  //         {
-  //           type: "input",
-  //           message: "Please Add Description For This Item",
-  //           name: "newName"
-  //         },
-  //         {
-  //           type: "input",
-  //           message: "Please Specify Its Department",
-  //           name: "newDepartment"
-  //         },
-  //         {
-  //           type: "number",
-  //           message: "Please Specify Price",
-  //           name: "newPrice"
-  //         },
-  //         {
-  //           type: "number",
-  //           message: "Please Specify How Many Stock You Want To Keep",
-  //           name: "newStock"
-  //         }
-  //       ])
-  //       .then(function(answer) {
-  //         var queryAddNewProduct =
-  //           "INSERT INTO products (item_id,product_name,department_name,price,stock_quantity) VALUES ?";
-  //         connection.query(
-  //           queryAddNewProduct,
-  //           [
-  //             answer.newID,
-  //             answer.newName,
-  //             answer.newDepartment,
-  //             answer.newPrice,
-  //             answer.newStock
-  //           ],
-  //           function(err, res) {
-  //             console.log(res);
-  //             console.log(
-  //               `\nYou have successfully added ${res.affectedRows} item into the system, which is detailed as follows:\n`
-  //             );
-  //             var displayNewlyAddedItem = "item_id = LAST_INSERT_ID()";
-  //             connection.query(
-  //               "SELECT * FROM products WHERE ?",
-  //               displayNewlyAddedItem,
-  //               function(err, res) {
-  //                 console.log(
-  //                   res[0].item_id.padEnd(10) +
-  //                     "|     " +
-  //                     res[0].product_name.padEnd(30) +
-  //                     "|     " +
-  //                     res[0].department_name.padEnd(10) +
-  //                     "|     " +
-  //                     res[0].price.toString().padEnd(10) +
-  //                     "|     " +
-  //                     res[0].stock_quantity
-  //                 );
-
-  //             );
-  //               }
-  //           }
-  //         );
-  //       });
-  //   }
+            connection.query(
+              "SELECT * FROM products WHERE ?",
+              { item_id: newID },
+              function(err, res) {
+                if (err) throw err;
+                console.log(
+                  res[0].item_id.padEnd(10) +
+                    "|     " +
+                    res[0].product_name.padEnd(30) +
+                    "|     " +
+                    res[0].department_name.padEnd(13) +
+                    "|     " +
+                    res[0].price.toString().padEnd(10) +
+                    "|     " +
+                    res[0].stock_quantity
+                );
+                console.log("\n       ".repeat(2));
+                runBamazonManager();
+              }
+            );
+          }
+        );
+      });
+  }
 }

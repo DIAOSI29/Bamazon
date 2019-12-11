@@ -11,6 +11,7 @@ var connection = mysql.createConnection({
 
 connection.connect(function(err) {
   if (err) throw err;
+
   console.log("successful linked");
   runBamazon();
 });
@@ -38,6 +39,7 @@ function runBamazon() {
           "|     " +
           res[i].price
       );
+      console.log("       ");
     }
     runCustomerSelect();
   });
@@ -96,7 +98,11 @@ function runBamazon() {
           // console.log(res[0].product_name);
 
           if (answer.quantity > chosenItemStockLevel) {
-            console.log("Insufficient Stock!");
+            console.log(
+              "\n" +
+                "Insufficient Stock! Please try again with a smaller quantity!" +
+                "\n"
+            );
             exitOrNot();
           } else {
             var stockLevelAfterThisSale = parseFloat(
