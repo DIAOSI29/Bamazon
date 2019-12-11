@@ -1,19 +1,24 @@
 CREATE DATABASE bamazon;
-USE bamazon; 
+USE bamazon;
 DROP TABLE IF EXISTS products;
-CREATE TABLE products(
-item_id VARCHAR(10) NOT NULL,
-product_name VARCHAR(40),
-department_name VARCHAR(20),
-price DECIMAL(10,2),
-stock_quantity INT,
-PRIMARY KEY (item_id)
+CREATE TABLE products
+(
+    item_id VARCHAR(10) NOT NULL,
+    product_name VARCHAR(40),
+    department_name VARCHAR(20),
+    price DECIMAL(10,2),
+    stock_quantity INT,
+    PRIMARY KEY (item_id)
 );
-ALTER TABLE products MODIFY COLUMN item_id VARCHAR(10) NOT NULL;
-select * from products;
+ALTER TABLE products MODIFY COLUMN item_id VARCHAR
+(10) NOT NULL;
+select *
+from products;
 
-INSERT INTO products VALUE 
-('AW5','Apple Watch 5','watch','649.00','320'),
+INSERT INTO products
+VALUE
+('AW5','Apple Watch 5','watch','649.00','320'
+),
 ('AP2W','AirPods 2 wireless charging','ear phone ','299.00','211'),
 ('APP','AirPods Pro','ear phone','399.00','182'),
 ('IP11','iPhone 11 128gb','mobile phone','1279.00','166'),
@@ -27,6 +32,8 @@ INSERT INTO products VALUE
 ('MP16P','16\'\' MacBook Pro 512gb','laptop','3799.00','48'),
 ('AWE','Apple Watch Edition','watch','1259.00','29');
 
-select * from products order by item_id;
+select *
+from products
+order by item_id;
 
 

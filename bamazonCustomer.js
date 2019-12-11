@@ -39,8 +39,8 @@ function runBamazon() {
           "|     " +
           res[i].price
       );
-      console.log("       ");
     }
+    console.log("       ");
     runCustomerSelect();
   });
 
